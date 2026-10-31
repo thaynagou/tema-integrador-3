@@ -1,0 +1,138 @@
+algoritmo "Dimensionamento de sistema de amortecimento"
+var
+  g, gama: real
+  massaVazio, massaCarga, percTras: real
+  nEixos, bolsasEixo: inteiro
+  fd, diam, pNom, pMax, altura, zeta: real
+  pesoTotal, pesoTras, cargaEixo, cargaBolsa, cargaDin: real
+  area, pEst, pDin, volume, rigidez, dMin: real
+  massaBolsa, wn, fn, cCrit, cAmort: real
+  nome: caracter
+
+inicio
+  g <- 9.81
+  gama <- 1.4
+  massaVazio <- 13780
+  bolsasEixo <- 2
+
+  escreval("")
+  escreval("  DIMENSIONAMENTO DE SISTEMA DE AMORTECIMENTO")
+  escreval("")
+  escreval("  Olá! Como podemos chamá-lo(a)? ")
+  leia(nome)
+  escreval("")
+  escreval("  Bem-vindo(a), ", nome, "!")
+  escreval("")
+  escreval("  Digite os dados do veículo:")
+  escreval("  Massa da carga (kg): ")
+  leia(massaCarga)
+  escreval("  Percentual do peso no eixo traseiro (%): ")
+  leia(percTras)
+  escreval("  Número de eixos traseiros: ")
+  leia(nEixos)
+  escreval("")
+  escreval("  Digite os dados da mola e do amortecedor:")
+  escreval("")
+  escreval("  Fator dinâmico (ex: 1.6): ")
+  leia(fd)
+  escreval("  Diâmetro efetivo da bolsa (m): ")
+  leia(diam)
+  escreval("  Pressão nominal (bar): ")
+  leia(pNom)
+  escreval("  Pressão máxima (bar): ")
+  leia(pMax)
+  escreval("  Altura de trabalho (m): ")
+  leia(altura)
+  escreval("  Razão de amortecimento (ex: 0.25): ")
+  leia(zeta)
+  escreval("")
+
+  pesoTotal  <- (massaVazio + massaCarga) * g
+  pesoTras   <- pesoTotal * percTras / 100
+  cargaEixo  <- pesoTras / nEixos
+  cargaBolsa <- cargaEixo / bolsasEixo
+  cargaDin   <- cargaBolsa * fd
+
+  area    <- Pi * diam * diam / 4
+  pEst    <- cargaBolsa / area / 100000
+  pDin    <- cargaDin / area / 100000
+  volume  <- area * altura
+  rigidez <- gama * pNom * 100000 * area * area / volume
+  dMin    <- RaizQ(4 * cargaDin / (pMax * 100000) / Pi) * 1000
+
+  massaBolsa <- cargaBolsa / g
+  wn         <- RaizQ(rigidez / massaBolsa)
+  fn         <- wn / (2 * Pi)
+  cCrit      <- 2 * massaBolsa * wn
+  cAmort     <- zeta * cCrit
+
+  escreval("  Olá, ", nome, "! Aqui estão os resultados do seu sistema de amortecimento:")
+  escreval("")
+  escreval("  CARGAS")
+  escreval("")
+  escreval("  Peso total ..................... ", pesoTotal/1000:10:2, " kN")
+  escreval("  Peso no conjunto traseiro ...... ", pesoTras/1000:10:2, " kN")
+  escreval("  Carga por eixo ................. ", cargaEixo/1000:10:2, " kN")
+  escreval("  Carga estática por bolsa ....... ", cargaBolsa/1000:10:2, " kN")
+  escreval("  Carga dinâmica por bolsa ....... ", cargaDin/1000:10:2, " kN")
+  escreval("")
+  escreval("  MOLA PNEUMÁTICA")
+  escreval("")
+  escreval("  Área efetiva ................... ", area:10:5, " m2")
+  escreval("  Pressão estática ............... ", pEst:10:2, " bar")
+  escreval("  Pressão dinâmica ............... ", pDin:10:2, " bar")
+  escreval("  Volume de ar ................... ", volume*1000:10:2, " L")
+  escreval("  Rigidez ........................ ", rigidez/1000:10:1, " kN/m")
+  escreval("")
+  escreval("  AMORTECEDOR (POR BOLSA)")
+  escreval("")
+  escreval("  Massa suspensa ................. ", massaBolsa:10:1, " kg")
+  escreval("  Frequência natural ............. ", fn:10:2, " Hz")
+  escreval("  Amortecimento crítico .......... ", cCrit/1000:10:2, " kN.s/m")
+  escreval("  Coeficiente do amortecedor ..... ", cAmort/1000:10:2, " kN.s/m")
+  escreval("")
+
+  escreval("  VERIFICAÇÕES")
+  escreval("")
+  se pEst <= pNom entao
+    escreval("  Condição estática .............. ", "[ATENDE]")
+  senao
+    escreval("  Condição estática .............. ", "[NÃO ATENDE]")
+  fimse
+  se pDin <= pMax entao
+    escreval("  Condição dinâmica .............. ", "[ATENDE]")
+  senao
+    escreval("  Condição dinâmica .............. ", "[NÃO ATENDE]")
+    escreval("  Diâmetro mínimo necessário ..... ", dMin:10:0, " mm")
+  fimse
+  se (fn >= 1) e (fn <= 2) entao
+    escreval("  Frequência natural (1 a 2 Hz) .. ", "[OK]")
+  senao
+    escreval("  Frequência natural (1 a 2 Hz) .. ", "[FORA DA FAIXA]")
+  fimse
+
+  escreval("")
+  escreval("  Análise dos resultados:")
+  escreval("")
+  escreval("  Cada bolsa sustenta ", cargaBolsa/1000:5:2, " kN com o caminhão parado.")
+  escreval("  Em movimento, com fator dinâmico ", fd:3:1, ", essa carga sobe para ", cargaDin/1000:5:2, " kN.")
+  escreval("  Isso acontece por causa de buracos e irregularidades da pista.")
+  escreval("")
+  escreval("  A pressão dentro da bolsa chega a ", pDin:4:2, " bar em movimento.")
+  se pDin <= pMax entao
+    escreval("  Como o limite é ", pMax:4:2, " bar, a bolsa suporta com segurança.")
+  senao
+    escreval("  Isso passa do limite de ", pMax:4:2, " bar, então a bolsa precisa ser maior.")
+  fimse
+  escreval("")
+  escreval("  A frequência natural é ", fn:4:2, " Hz.")
+  se fn < 1 entao
+    escreval("  É baixa: a suspensão fica muito mole e balança demais.")
+  fimse
+  se (fn >= 1) e (fn <= 2) entao
+    escreval("  Está na faixa de conforto, entre 1 e 2 Hz.")
+  fimse
+  se fn > 2 entao
+    escreval("  É alta: a suspensão fica dura e transmite as batidas.")
+  fimse
+fimalgoritmo
